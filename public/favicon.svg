@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" fill="none">
+  <rect x="1" y="1" width="38" height="38" rx="11" fill="url(#ez-gradient)" />
+  <rect x="9" y="11" width="15" height="2.4" rx="1.2" fill="#0b1315" opacity="0.9" />
+  <rect x="9" y="18.5" width="20" height="2.4" rx="1.2" fill="#0b1315" opacity="0.9" />
+  <rect x="9" y="26" width="12" height="2.4" rx="1.2" fill="#0b1315" opacity="0.9" />
+  <path d="M27 8.5 33 15l-6 6.5" stroke="#0b1315" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" opacity="0.55" />
+  <defs>
+    <linearGradient id="ez-gradient" x1="5" y1="3" x2="35" y2="38" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a3f0d4" />
+      <stop offset="0.55" stop-color="#72d8c0" />
+      <stop offset="1" stop-color="#4db8a8" />
+    </linearGradient>
+  </defs>
+</svg>

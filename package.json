@@ -1,0 +1,34 @@
+{
+  "name": "ezreader",
+  "private": true,
+  "version": "1.0.0",
+  "description": "EZReader — Your Personal Digital Library",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource-variable/lora": "^5.2.8",
+    "dompurify": "^3.2.7",
+    "epubjs": "^0.3.93",
+    "jszip": "^3.10.1",
+    "libarchive.js": "^2.0.2",
+    "lucide-react": "^0.468.0",
+    "mammoth": "^1.9.0",
+    "pdfjs-dist": "^4.8.69",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-router-dom": "^7.1.1"
+  },
+  "devDependencies": {
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@vitejs/plugin-react": "^4.3.4",
+    "typescript": "~5.7.2",
+    "vite": "^6.0.5"
+  }
+}
