@@ -1,9 +1,10 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import {
   AlertTriangle,
   CheckCircle2,
   Database,
   Download,
+  HardDrive,
   Info,
   Languages,
   Monitor,
@@ -15,6 +16,14 @@ import {
   Upload,
 } from 'lucide-react'
 import { useAppState, useI18n } from '../hooks/useAppStore'
+import {
+  clearFiles,
+  hydrateFiles,
+  pruneFiles,
+  saveOpenFiles,
+  storedFilesInfo,
+  type StoredFilesInfo,
+} from '../services/storage/fileStore'
 import { fileRegistry, store } from '../services/storage/store'
 import {
   applyBackup,
@@ -25,6 +34,7 @@ import {
   type ImportSummary,
 } from '../services/backup'
 import type { AccentColor, BackupEnvelope, BackupKind, FontFamily, GridSize, ReaderBackground, ComicLayout, ReadingDirection, SortKey, ThemeMode, ViewMode, PdfZoomPreset } from '../types'
+import { formatBytes } from '../utils/format'
 import { SORT_OPTIONS } from '../utils/sort'
 import { Modal } from '../components/common/Modal'
 import { PageHeader } from '../components/common/UI'
@@ -45,8 +55,45 @@ export function SettingsPage() {
   const importInput = useRef<HTMLInputElement>(null)
   const [review, setReview] = useState<{ envelope: BackupEnvelope; counts: ReturnType<typeof countBackup> } | null>(null)
   const [applying, setApplying] = useState(false)
+  const [fileInfo, setFileInfo] = useState<StoredFilesInfo>({ count: 0, size: 0 })
   const settings = state.settings
   const reader = settings.reader
+
+  const refreshFileInfo = async () => {
+    setFileInfo(await storedFilesInfo())
+  }
+
+  useEffect(() => {
+    void refreshFileInfo()
+  }, [])
+
+  const setKeepFiles = async (enabled: boolean) => {
+    store.updateSettings({ keepFiles: enabled })
+    if (enabled) {
+      const openCount = state.documents.filter((doc) => fileRegistry.has(doc.id)).length
+      const saved = await saveOpenFiles(state.documents)
+      if (saved < openCount) toast(t('file.storageWarning'), 'warning')
+    }
+    await refreshFileInfo()
+  }
+
+  const removeStored = async () => {
+    if (!fileInfo.count) {
+      toast(t('settings.noStoredFiles'), 'info')
+      return
+    }
+    const ok = await confirm({
+      title: t('settings.removeStoredTitle'),
+      description: t('settings.removeStoredText'),
+      confirmLabel: t('settings.removeStored'),
+      danger: true,
+    })
+    if (!ok) return
+    await clearFiles()
+    fileRegistry.clear()
+    await refreshFileInfo()
+    toast(t('toast.storedFilesRemoved'), 'success')
+  }
 
   const exportBackup = (kind: BackupKind) => {
     const empty =
@@ -100,8 +147,14 @@ export function SettingsPage() {
     setApplying(true)
     try {
       const result = applyBackup(review.envelope, mode, store.getState())
-      if (mode === 'replace') fileRegistry.clear()
+      if (mode === 'replace') {
+        fileRegistry.clear()
+        await pruneFiles(result.state.documents)
+      }
       store.replaceState(result.state)
+      await hydrateFiles(result.state.documents)
+      if (result.state.settings.keepFiles) await saveOpenFiles(result.state.documents)
+      await refreshFileInfo()
       const summary: ImportSummary = result.summary
       toast(
         `${t('settings.importSuccess')} · ${summary.documents + summary.collections + summary.series + summary.bookmarks + summary.notes + summary.history}`,
@@ -123,8 +176,10 @@ export function SettingsPage() {
       danger: true,
     })
     if (!ok) return
+    await clearFiles()
     fileRegistry.clear()
     store.clearAllData()
+    await refreshFileInfo()
     toast(t('toast.storageCleared'), 'success')
   }
 
@@ -511,6 +566,43 @@ export function SettingsPage() {
             <div className="settings-note">
               <Database size={16} />
               <p>{t('settings.storageNote')}</p>
+            </div>
+          </div>
+
+          <div className="settings-card">
+            <h3>{t('settings.fileCopies')}</h3>
+            <p className="settings-card-text">{t('settings.keepFilesHelp')}</p>
+            <div className="setting-row">
+              <div>
+                <strong>{t('settings.keepFiles')}</strong>
+                <small>{t('settings.keepFilesShort')}</small>
+              </div>
+              <div className="segmented">
+                <button
+                  type="button"
+                  className={settings.keepFiles ? 'active' : ''}
+                  onClick={() => void setKeepFiles(true)}
+                >
+                  {t('common.yes')}
+                </button>
+                <button
+                  type="button"
+                  className={!settings.keepFiles ? 'active' : ''}
+                  onClick={() => void setKeepFiles(false)}
+                >
+                  {t('common.no')}
+                </button>
+              </div>
+            </div>
+            <div className="settings-note">
+              <HardDrive size={16} />
+              <p>{t('settings.storedFilesCount', { count: fileInfo.count, size: formatBytes(fileInfo.size) })}</p>
+            </div>
+            <div className="data-actions">
+              <button type="button" className="button button-ghost button-small" onClick={() => void removeStored()}>
+                <Trash2 size={14} />
+                {t('settings.removeStored')}
+              </button>
             </div>
           </div>
         </div>

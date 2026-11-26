@@ -3,6 +3,7 @@ import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { AlertTriangle, ArrowLeft, FileWarning, Link2, LoaderCircle } from 'lucide-react'
 import { useAppState, useI18n, useIsFileAvailable } from '../hooks/useAppStore'
 import { useReadingTimer } from '../hooks/useReadingTimer'
+import { saveFile } from '../services/storage/fileStore'
 import { fileRegistry, store } from '../services/storage/store'
 import { matchFileToDocument, pickSingleFile } from '../services/fileHandler/picker'
 import type { DocumentCategory, DocumentMeta } from '../types'
@@ -70,7 +71,15 @@ export function ReaderHost() {
         if (!ok) return
       }
       fileRegistry.set(target.id, entry)
-      toast(t('file.matchGood'), 'success')
+      if (store.getState().settings.keepFiles) {
+        const stored = await saveFile(target, entry)
+        toast(
+          stored ? t('file.matchStored') : t('file.storageWarning'),
+          stored ? 'success' : 'warning',
+        )
+      } else {
+        toast(t('file.matchGood'), 'success')
+      }
     } catch (issue) {
       setError(errorMessage(issue))
     } finally {

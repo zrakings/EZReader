@@ -15,6 +15,7 @@ import {
   X,
 } from 'lucide-react'
 import { useAppState, useI18n } from '../hooks/useAppStore'
+import { removeFilesForDocuments } from '../services/storage/fileStore'
 import { fileRegistry, store } from '../services/storage/store'
 import type { DocumentMeta } from '../types'
 import { resolveGroupCover } from '../utils/groupCover'
@@ -97,8 +98,10 @@ export function SeriesDetailPage() {
       danger: true,
     })
     if (!ok) return
+    const remaining = state.documents.filter((item) => item.id !== document.id)
     fileRegistry.remove(document.id)
     store.removeDocuments([document.id])
+    await removeFilesForDocuments([document], remaining)
     toast(t('toast.libraryRemoved'), 'success')
   }
 

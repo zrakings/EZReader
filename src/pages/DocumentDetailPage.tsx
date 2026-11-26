@@ -19,6 +19,7 @@ import {
   Trash2,
 } from 'lucide-react'
 import { useAppState, useI18n, useIsFileAvailable } from '../hooks/useAppStore'
+import { removeFilesForDocuments, saveFile } from '../services/storage/fileStore'
 import { fileRegistry, store } from '../services/storage/store'
 import { matchFileToDocument, pickSingleFile } from '../services/fileHandler/picker'
 import type { DocumentMeta } from '../types'
@@ -91,7 +92,12 @@ export function DocumentDetailPage() {
       if (!ok) return
     }
     fileRegistry.set(document.id, entry)
-    toast(t('file.matchGood'), 'success')
+    if (store.getState().settings.keepFiles) {
+      const stored = await saveFile(document, entry)
+      toast(stored ? t('file.matchStored') : t('file.storageWarning'), stored ? 'success' : 'warning')
+    } else {
+      toast(t('file.matchGood'), 'success')
+    }
   }
 
   const remove = async () => {
@@ -102,8 +108,10 @@ export function DocumentDetailPage() {
       danger: true,
     })
     if (!ok) return
+    const remaining = state.documents.filter((item) => item.id !== document.id)
     fileRegistry.remove(document.id)
     store.removeDocuments([document.id])
+    await removeFilesForDocuments([document], remaining)
     toast(t('toast.libraryRemoved'), 'success')
     navigate('/library')
   }
@@ -307,7 +315,7 @@ export function DocumentDetailPage() {
 
       <div className="detail-file-note">
         <HardDrive size={16} />
-        <p>{t('file.sessionOnly')} {t('settings.backupHelp')}</p>
+        <p>{t('file.localCopyText')} {t('settings.backupHelp')}</p>
       </div>
 
       {renaming && (

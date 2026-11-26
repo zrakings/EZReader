@@ -30,6 +30,7 @@ export const DEFAULT_SETTINGS: Settings = {
   defaultSort: 'added-desc',
   accent: 'mint',
   gridSize: 'comfortable',
+  keepFiles: true,
   reader: {
     fontFamily: 'serif',
     fontSize: 18,
@@ -73,6 +74,7 @@ function normalizeSettings(value: unknown): Settings {
   return {
     ...DEFAULT_SETTINGS,
     ...partial,
+    keepFiles: partial.keepFiles !== false,
     reader: {
       ...DEFAULT_SETTINGS.reader,
       ...reader,

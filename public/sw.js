@@ -1,7 +1,8 @@
-/* EZReader offline app shell. Documents themselves are never cached. */
+/* EZReader offline app shell. Document copies live in a separate browser cache. */
 const VERSION = 'ezreader-shell-v3'
 const SHELL_CACHE = `${VERSION}-core`
 const ASSET_CACHE = `${VERSION}-assets`
+const FILE_CACHE = 'ezreader-files-v1'
 
 const CORE_ASSETS = [
   './',
@@ -65,7 +66,7 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(
           keys
-            .filter((key) => key !== SHELL_CACHE && key !== ASSET_CACHE)
+            .filter((key) => key !== SHELL_CACHE && key !== ASSET_CACHE && key !== FILE_CACHE)
             .map((key) => caches.delete(key)),
         ),
       )

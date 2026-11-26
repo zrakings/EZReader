@@ -12,20 +12,35 @@ import './styles/components.css'
 import './styles/pages.css'
 import './styles/reader.css'
 import { registerServiceWorker } from './services/pwa'
+import { hydrateFiles } from './services/storage/fileStore'
+import { store } from './services/storage/store'
 
 const container = document.getElementById('root')
 if (!container) throw new Error('EZReader could not find its root element.')
+const root: HTMLElement = container
 
-createRoot(container).render(
-  <StrictMode>
-    <HashRouter>
-      <UIProvider>
-        <ImportProvider>
-          <App />
-        </ImportProvider>
-      </UIProvider>
-    </HashRouter>
-  </StrictMode>,
-)
+async function start() {
+  // Restore browser-local file copies before rendering so imported documents
+  // are immediately available after a reload or a new browser session.
+  try {
+    await hydrateFiles(store.getState().documents)
+  } catch (error) {
+    console.warn('EZReader could not restore saved files.', error)
+  }
 
-registerServiceWorker()
+  createRoot(root).render(
+    <StrictMode>
+      <HashRouter>
+        <UIProvider>
+          <ImportProvider>
+            <App />
+          </ImportProvider>
+        </UIProvider>
+      </HashRouter>
+    </StrictMode>,
+  )
+
+  registerServiceWorker()
+}
+
+void start()

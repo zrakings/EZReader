@@ -136,6 +136,7 @@ export interface Settings {
   defaultSort: SortKey
   accent: AccentColor
   gridSize: GridSize
+  keepFiles: boolean
   reader: ReaderPreferences
 }
 

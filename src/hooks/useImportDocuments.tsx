@@ -10,6 +10,7 @@ import { LoaderCircle, Upload } from 'lucide-react'
 import type { DocumentMeta, FileEntry, ImportResult } from '../types'
 import { createCoverForFile } from '../services/fileHandler/coverService'
 import { inspectFile } from '../services/fileHandler/inspect'
+import { saveFile } from '../services/storage/fileStore'
 import { fileRegistry, store } from '../services/storage/store'
 import { errorMessage, extensionOf, formatLabel, uid } from '../utils/format'
 import { useUI } from '../components/common/UIProvider'
@@ -92,6 +93,10 @@ export function ImportProvider({ children }: { children: ReactNode }) {
             completedAt: null,
           }
           fileRegistry.set(document.id, entry)
+          if (store.getState().settings.keepFiles) {
+            const stored = await saveFile(document, entry)
+            if (!stored) toast(t('file.storageWarning'), 'warning')
+          }
           store.addDocuments([document], { [document.id]: cover })
           known.add(duplicateKey)
           added.push(document)

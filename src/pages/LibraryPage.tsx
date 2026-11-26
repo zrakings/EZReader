@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { useAppState, useI18n } from '../hooks/useAppStore'
 import { useImportDocuments } from '../hooks/useImportDocuments'
+import { removeFilesForDocuments } from '../services/storage/fileStore'
 import { fileRegistry, store } from '../services/storage/store'
 import type { DocumentMeta, DocumentCategory, ReadingStatus, SortKey, ViewMode } from '../types'
 import {
@@ -148,8 +149,11 @@ export function LibraryPage({ scope }: LibraryPageProps) {
       danger: true,
     })
     if (!ok) return
+    const removedIds = new Set(docs.map((doc) => doc.id))
+    const remaining = state.documents.filter((doc) => !removedIds.has(doc.id))
     docs.forEach((doc) => fileRegistry.remove(doc.id))
     store.removeDocuments(docs.map((doc) => doc.id))
+    await removeFilesForDocuments(docs, remaining)
     toast(
       docs.length > 1
         ? t('toast.documentsRemoved', { count: docs.length })

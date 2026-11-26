@@ -326,6 +326,7 @@ function sanitizeSettings(value: unknown, fallback: Settings): Settings {
   return {
     ...fallback,
     ...incoming,
+    keepFiles: incoming.keepFiles !== false,
     reader: {
       ...fallback.reader,
       ...(incoming.reader && typeof incoming.reader === 'object' ? incoming.reader : {}),

@@ -16,7 +16,7 @@ The app is a static React + TypeScript + Vite PWA and can be hosted for free on 
 - **Reading statistics** based on active reading time (only counted while the tab is visible and you are interacting).
 - **Settings** for theme, accent color, language (English/Indonesian), grid density, default library view, and reader preferences.
 - **Metadata backup and restore** as a versioned JSON file.
-- **PWA/offline support** for the application shell. Documents are never uploaded or cached by the service worker.
+- **PWA/offline support** for the application shell and browser-local document copies. Files are never uploaded.
 - **Responsive layout** for desktop, tablet, and mobile, with drag-and-drop import.
 
 ## Supported formats
@@ -36,7 +36,8 @@ The app is a static React + TypeScript + Vite PWA and can be hosted for free on 
 
 ## Privacy and data model
 
-- Document files stay on your device. EZReader does **not** upload, copy, or cache your documents.
+- Document files stay on your device. EZReader does **not** upload or transmit your documents.
+- By default, each imported file is saved as a browser-local copy in the `Cache API` so it opens again after a refresh without **Locate File**. This can be disabled in Settings and saved copies can be removed there.
 - Only metadata is stored in `LocalStorage` under versioned keys:
   - `ezreader.documents.v1`
   - `ezreader.covers.v1`
@@ -44,8 +45,8 @@ The app is a static React + TypeScript + Vite PWA and can be hosted for free on 
   - `ezreader.activity.v1`
   - `ezreader.settings.v1`
 - Open files live in an in-memory registry for the current tab. A `FileSystemFileHandle` may also be kept in memory when the browser supports the File System Access API.
-- Removing a document from the library deletes **EZReader metadata only**. The original file on your device is untouched.
-- After a page reload, the browser may not be able to reopen a local file automatically. EZReader clearly marks unavailable documents and asks you to **Locate File**, matching the original by file name and size.
+- Removing a document from the library deletes its EZReader metadata and saved browser copy. The original file on your device is untouched.
+- If saved copies are disabled or cleared, EZReader marks unavailable documents and asks you to **Locate File**, matching the original by file name and size.
 
 There is no IndexedDB, Dexie, SQLite, Firebase, Supabase, API server, AI service, login, or registration in this project.
 
@@ -93,7 +94,7 @@ No rewrite rules are needed because routes live after `#`.
 
 - The service worker is registered only in production builds.
 - The app shell, hashed JS/CSS bundles, fonts, icons, the libarchive worker, and its WASM binary are precached on install.
-- Documents and user files are never cached or transmitted.
+- Documents are never transmitted; optional/local saved copies are managed by the app's Cache API store, not the service worker.
 - On iOS, add the site to the Home Screen for a standalone app experience.
 
 ## Project structure
@@ -108,7 +109,7 @@ src/
   services/
     archiveHandler/ Archive and image page sources
     fileHandler/    File inspection, PDF loading, format handlers
-    storage/        LocalStorage store and in-memory file registry
+    storage/        LocalStorage store, Cache API file store, and in-memory file registry
   styles/          Base, layout, components, pages, reader styles
   types/           Shared TypeScript types
   utils/           Formatting, sorting, i18n, RTF parser, helpers
@@ -126,11 +127,12 @@ Settings offers metadata export/import as JSON.
 
 - A **full** backup can replace current metadata after confirmation.
 - Partial backups (collections, series, bookmarks, notes, history, favorites) are merged.
-- Restoring documents matches by file name and size and never restores the original files, because those never left your device.
+- Restoring documents matches by file name and size and never restores the original files, because those never left your device. Saved browser copies remain available when their file identity matches a restored document.
 
 ## Limitations
 
-- Browsers cannot silently reopen a local file after a reload. Use **Locate File** when prompted.
+- If a saved browser copy is missing or cleared, browsers cannot silently reopen the original local file. Use **Locate File** when prompted.
+- Browser storage quotas may prevent very large files from being saved as local copies; EZReader will warn you and keep the file usable for the current session.
 - Password-protected archives are not supported yet.
 - Very large files may be limited by available browser memory.
 - Reading-time statistics are best-effort estimates; browsers cannot track activity perfectly.

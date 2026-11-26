@@ -1,8 +1,9 @@
 /**
  * Registers the offline app-shell service worker in production builds.
  *
- * Documents are intentionally never cached: only the application shell and
- * runtime assets are stored. The service worker lives next to index.html so
+ * The service worker caches only the application shell and runtime assets.
+ * Document copies are managed separately by the Cache API file store. The
+ * service worker lives next to index.html so
  * the same build works at a domain root or in a GitHub Pages subdirectory.
  */
 export function registerServiceWorker(): void {
